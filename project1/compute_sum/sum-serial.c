@@ -3,8 +3,16 @@
 #define MAX_LINE_LENGTH 5
 
 int main(int argc, char** argv) {
+
   FILE* file;
-  char* filename = "./input3.txt";
+
+  if(argc != 2) {
+    printf("This program expects the name of the file that contains a list of integers.\n");
+    return 1;
+  }
+  
+  char* filename = argv[1];
+
   char line[MAX_LINE_LENGTH];
 
   file = fopen(filename, "r");
@@ -19,7 +27,7 @@ int main(int argc, char** argv) {
       running_sum += atoi(line);
     }
 
-    printf("Final sum is: %d", running_sum);
+    printf("%d\n", running_sum);
 
     fclose(file);
   }
