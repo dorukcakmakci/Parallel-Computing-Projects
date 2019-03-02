@@ -2,7 +2,7 @@
 #include "string.h"
 
 // can be changed wrt input matrix dimensions.
-#define MAX_LINE_LENGTH 10
+#define MAX_LINE_LENGTH 100
 
 // the matrix multiplication is of the form:
 // A x B = C
