@@ -1,5 +1,7 @@
 #include "stdio.h"
 #include "mpi.h"
+
+// subject to change
 #define MAX_LINE_LENGTH 5
 
 int main(int argc, char **argv) {
@@ -10,7 +12,7 @@ int main(int argc, char **argv) {
     }
 
     MPI_Status status;
-    int size, rank, number_count, start_index;
+    int size, rank, number_count;
     int *arr_slice;
     int local_sum;
 
@@ -37,7 +39,6 @@ int main(int argc, char **argv) {
             
             int line_count = 0;
 
-            // should also include the case when the count of input numbers is greater than the number of processors.
             while(fgets(line, MAX_LINE_LENGTH, file) != NULL) {
                 line_count++;
             }
