@@ -80,38 +80,61 @@ int main(int argc, char** argv) {
 
         fgets(buffer, MAX_LINE_LENGTH, fp_A);
         int A_dim = atoi(buffer);
-        
+        int A[A_dim][A_dim];
+
         fgets(buffer, MAX_LINE_LENGTH, fp_B);
         int B_dim = atoi(buffer);
+        int B[B_dim][B_dim];
 
-        int A[A_dim][A_dim], B[B_dim][B_dim];
+        // store matrix B in column major order
+        int row = 0;
+        int col = 0;
+        char * element;
+        while ( fgets(buffer, MAX_LINE_LENGTH, fp_B) != NULL) {
+            row = 0;
+            element =  strtok(buffer, " ");
+            while (element != NULL) {
+                B[row][col] = atoi(element);
+                row++;
+                element = strtok(NULL, " ");
+            }
+            col++;
+        }
 
         // store matrix A in row major order
-        int row = 0;
-        int col;
-        char * ele;
+        row = 0;
+        col = 0;
         while ( fgets(buffer, MAX_LINE_LENGTH, fp_A) != NULL) {
             col = 0;
-            ele =  strtok(buffer, " ");
-            while (ele != NULL) {
-            A[row][col] = atoi(ele);
-            col++;
-            ele = strtok(NULL, " ");
+            element =  strtok(buffer, " ");
+            while (element != NULL) {
+                printf(" current element: %d\n", atoi(element));
+                int toStore = atoi(element);
+                A[row][col] = toStore;
+                col++;
+                element = strtok(NULL, " ");
             }
             row++;
         }
 
-        // store matrix B in column major order
-        col = 0;
-        while ( fgets(buffer, MAX_LINE_LENGTH, fp_B) != NULL) {
-            row = 0;
-            ele =  strtok(buffer, " ");
-            while (ele != NULL) {
-            B[row][col] = atoi(ele);
-            row++;
-            ele = strtok(NULL, " ");
+        for( int i = 0; i < A_dim; i++) {
+            for( int j = 0; j < A_dim; j++) {
+                printf("%d ", A[i][j]);
             }
-            col++;
+            printf("\n");
+        }
+
+        
+
+        
+
+        printf("\n");
+
+        for( int i = 0; i < B_dim; i++) {
+            for( int j = 0; j < B_dim; j++) {
+                printf("%d ", B[i][j]);
+            }
+            printf("\n");
         }
 
         // since both A and B are square matrices, C also has the same dimension as A and B
@@ -123,7 +146,7 @@ int main(int argc, char** argv) {
 
         // find computation per matrix
         comp_per_node = C_dim * C_dim / size;
-        printf("computation_per_processor: %d", comp_per_node);
+        printf("computation_per_processor: %d\n", comp_per_node);
 
         // each processor needs to do comp_per_node dot product operations.
         int op_count = 0;
@@ -139,8 +162,11 @@ int main(int argc, char** argv) {
 
                 // master processor's turn to compute
                 if(current_processor == 0) {
-
+                    
+                    printf("Row block: %d, %d, %d, %d, %d, %d\n", row_block[0], row_block[1], row_block[2], row_block[3], row_block[4], row_block[5]);
+                    printf("Col block: %d, %d, %d, %d, %d, %d\n", col_block[0], col_block[1], col_block[2], col_block[3], col_block[4], col_block[5]);
                     ele = dot_product(row_block, col_block, C_dim);
+                    printf("computed this as ele: %d\n", ele);
 
                     // need to pass computation turn to another processor after the comp_per_node th operation
                     if(op_count + 1 >= comp_per_node) {
