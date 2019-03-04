@@ -19,6 +19,15 @@
 // 2- The dimensions of the input matrices is perfectly divisible by square root
 //    of the number of processors. (e.g. input matrices are 30x30 then we use 9 processors).
 
+// for code re-use
+int dot_product(int *left, int *right, int size) {
+    int sum = 0; 
+    for(int idx = 0; idx < size; idx++) {
+        sum += left[idx] * right[idx];
+    }
+    return sum;
+}
+
 int main(int argc, char** argv) {
 
     if(argc != 4) {
@@ -27,13 +36,213 @@ int main(int argc, char** argv) {
     }
 
     MPI_Status status;
-    int size, rank;
+    int size, rank, ele, block_size;
+    int *row_block, *col_block;
 
     MPI_Init(&argc, &argv);
 
-    // Insert mm code here.
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    // master process reads the file and generates input matrices.
+    // IMPORTANT NOTE: A matrix is stored in row-major order but B matrix is stored in column major order
+    // This tweak makes splitting matrices to rows and columns easier.
+    if(rank == 0) { // master
+
+        FILE *fp_A, *fp_B, *fp_C;
+
+        // buffer for file read and write
+        char buffer[MAX_LINE_LENGTH];
+
+        if(argc != 4) {
+            printf("This program expects 3 filenames as input. First and second arguments are the names of the files that contains the matrix A and B respectively. The third argument is the name of the output file to be produced.\n");
+            return 1;
+        }
+
+        // input matrix filenames
+        char * A_filename = argv[1];
+        char * B_filename = argv[2];
+        // output filename of the C matrix
+        char * C_filename = argv[3];
+
+        fp_A = fopen(A_filename, "r");
+        fp_B = fopen(B_filename, "r");
+        fp_C = fopen(C_filename, "w");
+
+        if(fp_A ==  NULL) {
+            printf("File can not be opened: %s", A_filename);
+            return 1;
+        } 
+        if(fp_B == NULL) {
+            printf("File can not be opened: %s", B_filename);
+            return 1;
+        }
+
+        fgets(buffer, MAX_LINE_LENGTH, fp_A);
+        int A_dim = atoi(buffer);
+        
+        fgets(buffer, MAX_LINE_LENGTH, fp_B);
+        int B_dim = atoi(buffer);
+
+        int A[A_dim][A_dim], B[B_dim][B_dim];
+
+        // store matrix A in row major order
+        int row = 0;
+        int col;
+        char * ele;
+        while ( fgets(buffer, MAX_LINE_LENGTH, fp_A) != NULL) {
+            col = 0;
+            ele =  strtok(buffer, " ");
+            while (ele != NULL) {
+            A[row][col] = atoi(ele);
+            col++;
+            ele = strtok(NULL, " ");
+            }
+            row++;
+        }
+
+        // store matrix B in column major order
+        col = 0;
+        while ( fgets(buffer, MAX_LINE_LENGTH, fp_B) != NULL) {
+            row = 0;
+            ele =  strtok(buffer, " ");
+            while (ele != NULL) {
+            B[row][col] = atoi(ele);
+            row++;
+            ele = strtok(NULL, " ");
+            }
+            col++;
+        }
+
+        // since both A and B are square matrices, C also has the same dimension as A and B
+        int C_dim = A_dim;
+        int C[C_dim][C_dim];
+
+        // define block size in order to pass to worker processors
+        block_size = C_dim;
+
+        // find computation per matrix
+        int comp_per_matrix = C_dim * C_dim / size;
+
+        // each processor needs to do comp_per_matrix dot product operations.
+        int op_count = 0;
+        int current_processor = 0;
+
+        for(int row = 0; row < C_dim; row++) {
+            for(int col = 0; col < C_dim; col++) {
+
+                row_block = A[row]; // get one row of A
+                col_block = B[col]; // get one col of B
+
+                // master processor's turn to compute
+                if(current_processor == 0) {
+
+                    ele = dot_product(row_block, col_block, C_dim);
+
+                    // need to pass computation turn to another processor after the comp_per_matrix th operation
+                    if(op_count + 1== comp_per_matrix) {
+                        op_count = 0;
+                        current_processor++;
+                    }
+                    else {
+                        op_count++;
+                    }
+                }
+                // worker processors' turn to compute
+                else {
+                    // first pass the size of col and row blocks to the workers
+                    int size_tag = current_processor;
+                    MPI_Send((void *)&block_size, 1, MPI_INT, current_processor, size_tag, MPI_COMM_WORLD);
+                    printf("master sent size to %d\n", current_processor);
+
+                    // pass row block to worker process
+                    int row_tag = current_processor +  size;
+                    MPI_Send((void *)row_block, C_dim, MPI_INT, current_processor, row_tag, MPI_COMM_WORLD);
+                    printf("master passed row block to %d\n", current_processor);
+
+                    // pass col block to worker process
+                    int col_tag = current_processor + 2 * size;
+                    MPI_Send((void *)col_block, C_dim, MPI_INT, current_processor, col_tag, MPI_COMM_WORLD);
+                    printf("master sent col block to %d\n", current_processor);
+
+                    // receive the result of the operation
+                    int ele_tag = current_processor + 3 * size;
+                    MPI_Recv((void*)&ele, 1, MPI_INT, current_processor, ele_tag, MPI_COMM_WORLD, &status);
+                    printf("master received [%d][%d] element from %d\n", row, col, current_processor);
+
+                    // need to pass computation turn to another processor after the comp_per_matrix th operation
+                    if(op_count + 1 == comp_per_matrix) {
+                        op_count = 0;
+                        current_processor++;
+                    }
+                    else {
+                        op_count++;
+                    }
+
+                }
+
+                C[row][col] = ele;
+            }
+        }
+
+        // Write results of the operation to the specified output file.
+        for( int i = 0; i < C_dim; i++) {
+            for( int j = 0; j < C_dim; j++) {
+                fprintf(fp_C, "%d ", C[i][j]);
+            }
+            fprintf(fp_C, "\n");
+        }
+
+        // Also for testing, print the result to console
+        for( int i = 0; i < C_dim; i++) {
+            for( int j = 0; j < C_dim; j++) {
+                printf("%d ", C[i][j]);
+            }
+            printf("\n");
+        }
+
+        printf("\n");
+
+        // Close all file handles
+        fclose(fp_A);
+        fclose(fp_B);
+        fclose(fp_C);
+
+
+    }
+    else { // worker
+
+        int size_tag = rank;
+        int row_tag = rank + size;
+        int col_tag = rank + 2 * size;
+        int ele_tag = rank + 3 * size;
+
+        // First receive block size
+        MPI_Recv((void*)&block_size, 1, MPI_INT, 0, size_tag, MPI_COMM_WORLD, &status);
+        printf("worker ranked %d received block size\n", rank);
+
+        // Then create corresponding row and column blocks in stack
+        int row[block_size], col[block_size];
+        row_block = row;
+        col_block = col;
+
+        // Then receive row block and col block
+        MPI_Recv((void*)row_block, block_size, MPI_INT, 0, row_tag, MPI_COMM_WORLD, &status);
+        printf("worker ranked %d received row block\n", rank);
+        MPI_Recv((void*)col_block, block_size, MPI_INT, 0, col_tag, MPI_COMM_WORLD, &status);
+        printf("worker ranked %d received col block\n", rank);
+
+        // Perform computation
+        ele = dot_product(row_block, col_block, block_size);
+
+        // Send result beck to master
+        MPI_Send((void*)&ele, 1, MPI_INT, 0, ele_tag, MPI_COMM_WORLD);
+        printf("worker ranked %d sent ele: %d\n", rank, ele);
+
+    }
 
     MPI_Finalize();
 
     return 0;
 }
+
