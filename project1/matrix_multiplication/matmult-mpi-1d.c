@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
     }
 
     MPI_Status status;
-    int size, rank, ele, block_size;
+    int size, rank, ele, block_size, comp_per_node;
     int *row_block, *col_block;
 
     MPI_Init(&argc, &argv);
@@ -122,11 +122,14 @@ int main(int argc, char** argv) {
         block_size = C_dim;
 
         // find computation per matrix
-        int comp_per_matrix = C_dim * C_dim / size;
+        comp_per_node = C_dim * C_dim / size;
+        printf("computation_per_processor: %d", comp_per_node);
 
-        // each processor needs to do comp_per_matrix dot product operations.
+        // each processor needs to do comp_per_node dot product operations.
         int op_count = 0;
         int current_processor = 0;
+
+        int flag = 1;
 
         for(int row = 0; row < C_dim; row++) {
             for(int col = 0; col < C_dim; col++) {
@@ -139,8 +142,8 @@ int main(int argc, char** argv) {
 
                     ele = dot_product(row_block, col_block, C_dim);
 
-                    // need to pass computation turn to another processor after the comp_per_matrix th operation
-                    if(op_count + 1== comp_per_matrix) {
+                    // need to pass computation turn to another processor after the comp_per_node th operation
+                    if(op_count + 1 >= comp_per_node) {
                         op_count = 0;
                         current_processor++;
                     }
@@ -150,7 +153,14 @@ int main(int argc, char** argv) {
                 }
                 // worker processors' turn to compute
                 else {
-                    // first pass the size of col and row blocks to the workers
+                    if (flag == 1) {
+                        // first pass the computation per node to workers
+                        int comp_tag = current_processor + 4 * size;
+                        MPI_Send((void *)&comp_per_node, 1, MPI_INT, current_processor, comp_tag, MPI_COMM_WORLD);
+                        flag = 0;
+
+                    }
+                    // pass the size of col and row blocks to the workers
                     int size_tag = current_processor;
                     MPI_Send((void *)&block_size, 1, MPI_INT, current_processor, size_tag, MPI_COMM_WORLD);
                     printf("master sent size to %d\n", current_processor);
@@ -170,9 +180,10 @@ int main(int argc, char** argv) {
                     MPI_Recv((void*)&ele, 1, MPI_INT, current_processor, ele_tag, MPI_COMM_WORLD, &status);
                     printf("master received [%d][%d] element from %d\n", row, col, current_processor);
 
-                    // need to pass computation turn to another processor after the comp_per_matrix th operation
-                    if(op_count + 1 == comp_per_matrix) {
+                    // need to pass computation turn to another processor after the comp_per_node th operation
+                    if(op_count + 1 == comp_per_node) {
                         op_count = 0;
+                        flag = 1;
                         current_processor++;
                     }
                     else {
@@ -216,28 +227,35 @@ int main(int argc, char** argv) {
         int row_tag = rank + size;
         int col_tag = rank + 2 * size;
         int ele_tag = rank + 3 * size;
+        int comp_tag = rank + 4 * size;
 
-        // First receive block size
-        MPI_Recv((void*)&block_size, 1, MPI_INT, 0, size_tag, MPI_COMM_WORLD, &status);
-        printf("worker ranked %d received block size\n", rank);
+        // First receive computation amount to do
+        MPI_Recv((void*)&comp_per_node, 1, MPI_INT, 0, comp_tag, MPI_COMM_WORLD, &status);
 
-        // Then create corresponding row and column blocks in stack
-        int row[block_size], col[block_size];
-        row_block = row;
-        col_block = col;
+        for (int i = 0; i < comp_per_node; i++){
 
-        // Then receive row block and col block
-        MPI_Recv((void*)row_block, block_size, MPI_INT, 0, row_tag, MPI_COMM_WORLD, &status);
-        printf("worker ranked %d received row block\n", rank);
-        MPI_Recv((void*)col_block, block_size, MPI_INT, 0, col_tag, MPI_COMM_WORLD, &status);
-        printf("worker ranked %d received col block\n", rank);
+            // Then receive block size
+            MPI_Recv((void*)&block_size, 1, MPI_INT, 0, size_tag, MPI_COMM_WORLD, &status);
+            printf("worker ranked %d received block size\n", rank);
 
-        // Perform computation
-        ele = dot_product(row_block, col_block, block_size);
+            // Then create corresponding row and column blocks in stack
+            int row[block_size], col[block_size];
+            row_block = row;
+            col_block = col;
 
-        // Send result beck to master
-        MPI_Send((void*)&ele, 1, MPI_INT, 0, ele_tag, MPI_COMM_WORLD);
-        printf("worker ranked %d sent ele: %d\n", rank, ele);
+            // Then receive row block and col block
+            MPI_Recv((void*)row_block, block_size, MPI_INT, 0, row_tag, MPI_COMM_WORLD, &status);
+            printf("worker ranked %d received row block\n", rank);
+            MPI_Recv((void*)col_block, block_size, MPI_INT, 0, col_tag, MPI_COMM_WORLD, &status);
+            printf("worker ranked %d received col block\n", rank);
+
+            // Perform computation
+            ele = dot_product(row_block, col_block, block_size);
+
+            // Send result beck to master
+            MPI_Send((void*)&ele, 1, MPI_INT, 0, ele_tag, MPI_COMM_WORLD);
+            printf("worker ranked %d sent ele: %d\n", rank, ele);
+        }
 
     }
 
