@@ -101,7 +101,9 @@ int main(int argc, char **argv) {
     // free the allocated heap space for all processors
     free(arr);
 
-    printf("%d\n", global_sum);
+    if(rank == 0) {
+        printf("%d\n", global_sum);
+    }
 
     MPI_Finalize();
 

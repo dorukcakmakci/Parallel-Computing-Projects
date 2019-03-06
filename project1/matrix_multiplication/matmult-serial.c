@@ -2,7 +2,7 @@
 #include "string.h"
 
 // can be changed wrt input matrix dimensions.
-#define MAX_LINE_LENGTH 100
+#define MAX_LINE_LENGTH 1000
 
 // the matrix multiplication is of the form:
 // A x B = C
@@ -73,24 +73,6 @@ int main(int argc, char** argv) {
     row++;
   }
 
-  for( int i = 0; i < A_dim; i++) {
-    for( int j = 0; j < A_dim; j++) {
-        printf("%d ", A[i][j]);
-    }
-    printf("\n");
-  }
-
-  printf("\n");
-
-  for( int i = 0; i < B_dim; i++) {
-    for( int j = 0; j < B_dim; j++) {
-        printf("%d ", B[i][j]);
-    }
-    printf("\n");
-  }
-
-  printf("\n");
-
   // since both A and B are square matrices, C also has the same dimension as A and B
   int C_dim = A_dim;
   fprintf(fp_C, "%d\n", C_dim);
@@ -109,15 +91,6 @@ int main(int argc, char** argv) {
     }
     fprintf(fp_C, "\n");
   }
-
-  for( int i = 0; i < C_dim; i++) {
-    for( int j = 0; j < C_dim; j++) {
-        printf("%d ", C[i][j]);
-    }
-    printf("\n");
-  }
-
-  printf("\n");
 
   fclose(fp_A);
   fclose(fp_B);

@@ -30,11 +30,6 @@ int dot_product(int *left, int *right, int size) {
 
 int main(int argc, char** argv) {
 
-    if(argc != 4) {
-        printf("This program expects 3 filenames as input. First and second arguments are the names of the files that contains the matrix A and B respectively. The third argument is the name of the output file to be produced.\n");
-        return 1;
-    }
-
     MPI_Status status;
     int size, rank, ele, block_size, comp_per_node;
     int *row_block, *col_block;
@@ -108,33 +103,12 @@ int main(int argc, char** argv) {
             col = 0;
             element =  strtok(buffer, " ");
             while (element != NULL) {
-                printf(" current element: %d\n", atoi(element));
                 int toStore = atoi(element);
                 A[row][col] = toStore;
                 col++;
                 element = strtok(NULL, " ");
             }
             row++;
-        }
-
-        for( int i = 0; i < A_dim; i++) {
-            for( int j = 0; j < A_dim; j++) {
-                printf("%d ", A[i][j]);
-            }
-            printf("\n");
-        }
-
-        
-
-        
-
-        printf("\n");
-
-        for( int i = 0; i < B_dim; i++) {
-            for( int j = 0; j < B_dim; j++) {
-                printf("%d ", B[i][j]);
-            }
-            printf("\n");
         }
 
         // since both A and B are square matrices, C also has the same dimension as A and B
@@ -144,9 +118,8 @@ int main(int argc, char** argv) {
         // define block size in order to pass to worker processors
         block_size = C_dim;
 
-        // find computation per matrix
+        // find computation per processor
         comp_per_node = C_dim * C_dim / size;
-        printf("computation_per_processor: %d\n", comp_per_node);
 
         // each processor needs to do comp_per_node dot product operations.
         int op_count = 0;
@@ -162,11 +135,8 @@ int main(int argc, char** argv) {
 
                 // master processor's turn to compute
                 if(current_processor == 0) {
-                    
-                    printf("Row block: %d, %d, %d, %d, %d, %d\n", row_block[0], row_block[1], row_block[2], row_block[3], row_block[4], row_block[5]);
-                    printf("Col block: %d, %d, %d, %d, %d, %d\n", col_block[0], col_block[1], col_block[2], col_block[3], col_block[4], col_block[5]);
+
                     ele = dot_product(row_block, col_block, C_dim);
-                    printf("computed this as ele: %d\n", ele);
 
                     // need to pass computation turn to another processor after the comp_per_node th operation
                     if(op_count + 1 >= comp_per_node) {
@@ -189,22 +159,18 @@ int main(int argc, char** argv) {
                     // pass the size of col and row blocks to the workers
                     int size_tag = current_processor;
                     MPI_Send((void *)&block_size, 1, MPI_INT, current_processor, size_tag, MPI_COMM_WORLD);
-                    printf("master sent size to %d\n", current_processor);
 
                     // pass row block to worker process
                     int row_tag = current_processor +  size;
                     MPI_Send((void *)row_block, C_dim, MPI_INT, current_processor, row_tag, MPI_COMM_WORLD);
-                    printf("master passed row block to %d\n", current_processor);
 
                     // pass col block to worker process
                     int col_tag = current_processor + 2 * size;
                     MPI_Send((void *)col_block, C_dim, MPI_INT, current_processor, col_tag, MPI_COMM_WORLD);
-                    printf("master sent col block to %d\n", current_processor);
 
                     // receive the result of the operation
                     int ele_tag = current_processor + 3 * size;
                     MPI_Recv((void*)&ele, 1, MPI_INT, current_processor, ele_tag, MPI_COMM_WORLD, &status);
-                    printf("master received [%d][%d] element from %d\n", row, col, current_processor);
 
                     // need to pass computation turn to another processor after the comp_per_node th operation
                     if(op_count + 1 == comp_per_node) {
@@ -223,6 +189,7 @@ int main(int argc, char** argv) {
         }
 
         // Write results of the operation to the specified output file.
+        fprintf(fp_C, "%d\n", C_dim);
         for( int i = 0; i < C_dim; i++) {
             for( int j = 0; j < C_dim; j++) {
                 fprintf(fp_C, "%d ", C[i][j]);
@@ -230,22 +197,10 @@ int main(int argc, char** argv) {
             fprintf(fp_C, "\n");
         }
 
-        // Also for testing, print the result to console
-        for( int i = 0; i < C_dim; i++) {
-            for( int j = 0; j < C_dim; j++) {
-                printf("%d ", C[i][j]);
-            }
-            printf("\n");
-        }
-
-        printf("\n");
-
         // Close all file handles
         fclose(fp_A);
         fclose(fp_B);
         fclose(fp_C);
-
-
     }
     else { // worker
 
@@ -262,7 +217,6 @@ int main(int argc, char** argv) {
 
             // Then receive block size
             MPI_Recv((void*)&block_size, 1, MPI_INT, 0, size_tag, MPI_COMM_WORLD, &status);
-            printf("worker ranked %d received block size\n", rank);
 
             // Then create corresponding row and column blocks in stack
             int row[block_size], col[block_size];
@@ -271,16 +225,13 @@ int main(int argc, char** argv) {
 
             // Then receive row block and col block
             MPI_Recv((void*)row_block, block_size, MPI_INT, 0, row_tag, MPI_COMM_WORLD, &status);
-            printf("worker ranked %d received row block\n", rank);
             MPI_Recv((void*)col_block, block_size, MPI_INT, 0, col_tag, MPI_COMM_WORLD, &status);
-            printf("worker ranked %d received col block\n", rank);
 
             // Perform computation
             ele = dot_product(row_block, col_block, block_size);
 
             // Send result beck to master
             MPI_Send((void*)&ele, 1, MPI_INT, 0, ele_tag, MPI_COMM_WORLD);
-            printf("worker ranked %d sent ele: %d\n", rank, ele);
         }
 
     }

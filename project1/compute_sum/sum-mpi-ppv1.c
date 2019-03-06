@@ -109,7 +109,6 @@ int main(int argc, char **argv) {
 
                 // update start index
                 index_so_far += number_count;
-                printf("%d\n", index_so_far);
             }
 
             
