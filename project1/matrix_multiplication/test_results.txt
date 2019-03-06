@@ -1,0 +1,7 @@
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/matrix_multiplication$ mpirun -np 1 mm_p mat1.bin mat2.bin mat3.bin 
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/matrix_multiplication$ mpirun -np 9 mm_p mat1.bin mat2.bin mat3.bin 
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/matrix_multiplication$ mpirun -np 25 mm_p mat1.bin mat2.bin mat3.bin 
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/matrix_multiplication$ mpirun -np 36 mm_p mat1.bin mat2.bin mat3.bin 
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/matrix_multiplication$ mpirun -np 4 mm_p mat1.bin mat2.bin mat3.bin 
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/matrix_multiplication$ mpirun -np 100 mm_p mat1.bin mat2.bin mat3.bin 
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/matrix_multiplication$ ./mm_s mat1.bin  mat2.bin mat3.bin 
