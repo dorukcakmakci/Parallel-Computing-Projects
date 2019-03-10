@@ -2,7 +2,7 @@
 #include "mpi.h"
 
 // subject to change 
-#define MAX_LINE_LENGTH 5 
+#define MAX_LINE_LENGTH 100 
 
 int main(int argc, char **argv) {
 
@@ -12,10 +12,15 @@ int main(int argc, char **argv) {
     }
 
     MPI_Status status;
-    int size, rank, number_count, local_sum;
+    int size, rank, number_count;
+    int local_sum;
     int *arr;
 
     MPI_Init(&argc, &argv);
+
+    double t1, t2;
+
+    t1 = MPI_Wtime();
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -101,9 +106,16 @@ int main(int argc, char **argv) {
     // free the allocated heap space for all processors
     free(arr);
 
+    // Now all processors computed the result but only master processor prints the result
     if(rank == 0) {
         printf("%d\n", global_sum);
     }
+
+    t2 = MPI_Wtime();
+    if(rank == 0){
+        //printf( "Elapsed time is %f\n", t2 - t1 );
+    }
+    
 
     MPI_Finalize();
 

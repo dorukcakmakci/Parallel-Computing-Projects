@@ -1,5 +1,6 @@
 #include "stdio.h"
 #include "string.h"
+#include <time.h>
 
 // can be changed wrt input matrix dimensions.
 #define MAX_LINE_LENGTH 1000
@@ -9,6 +10,8 @@
 // the variable naming is done in this manner.
 
 int main(int argc, char** argv) {
+
+  clock_t start = clock(), diff;
 
   FILE *fp_A, *fp_B, *fp_C;
 
@@ -96,6 +99,10 @@ int main(int argc, char** argv) {
   fclose(fp_B);
   fclose(fp_C);
 
+  diff = clock() - start;
+
+  int msec = (double)diff * 1000000 / CLOCKS_PER_SEC;
+  //printf("Time taken %d microseconds\n", msec);  
 
   return 0;
 }

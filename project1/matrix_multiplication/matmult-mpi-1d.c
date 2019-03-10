@@ -3,7 +3,7 @@
 #include "mpi.h"
 
 // can be changed wrt input matrix dimensions.
-#define MAX_LINE_LENGTH 100
+#define MAX_LINE_LENGTH 1000
 
 // the matrix multiplication is of the form:
 // A x B = C
@@ -35,6 +35,10 @@ int main(int argc, char** argv) {
     int *row_block, *col_block;
 
     MPI_Init(&argc, &argv);
+
+    double t1, t2;
+
+    t1 = MPI_Wtime();
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -127,6 +131,7 @@ int main(int argc, char** argv) {
 
         int flag = 1;
 
+        fprintf(fp_C, "%d\n", C_dim);
         for(int row = 0; row < C_dim; row++) {
             for(int col = 0; col < C_dim; col++) {
 
@@ -184,15 +189,7 @@ int main(int argc, char** argv) {
 
                 }
 
-                C[row][col] = ele;
-            }
-        }
-
-        // Write results of the operation to the specified output file.
-        fprintf(fp_C, "%d\n", C_dim);
-        for( int i = 0; i < C_dim; i++) {
-            for( int j = 0; j < C_dim; j++) {
-                fprintf(fp_C, "%d ", C[i][j]);
+                fprintf(fp_C, "%d ", ele);
             }
             fprintf(fp_C, "\n");
         }
@@ -234,6 +231,11 @@ int main(int argc, char** argv) {
             MPI_Send((void*)&ele, 1, MPI_INT, 0, ele_tag, MPI_COMM_WORLD);
         }
 
+    }
+
+    t2 = MPI_Wtime();
+    if(rank == 0){
+        //printf( "Elapsed time is %f\n", t2 - t1 );
     }
 
     MPI_Finalize();

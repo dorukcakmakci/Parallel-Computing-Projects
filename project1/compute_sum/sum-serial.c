@@ -1,8 +1,12 @@
 #include "stdio.h"
+#include <time.h>
 
-#define MAX_LINE_LENGTH 5
+#define MAX_LINE_LENGTH 100
 
 int main(int argc, char** argv) {
+
+  clock_t start = clock();
+  clock_t diff;
 
   FILE* file;
 
@@ -21,16 +25,21 @@ int main(int argc, char** argv) {
     printf("Could not open file: %s", filename);
   }
   else{
-    int running_sum = 0;
+    long running_sum = 0;
 
     while(fgets(line, MAX_LINE_LENGTH, file) != NULL) {
       running_sum += atoi(line);
     }
 
-    printf("%d\n", running_sum);
+    printf("%ld\n", running_sum);
 
     fclose(file);
   }
+
+  diff = clock() - start;
+
+  int msec = (double)diff * 1000000 / CLOCKS_PER_SEC;
+  //printf("Time taken %d microseconds\n", msec);
 
   return 0;
 }
