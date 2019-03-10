@@ -1,0 +1,68 @@
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ ./sum_s ./sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 1 sum_mpiv1 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 2 sum_mpiv1 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 5 sum_mpiv1 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 10 sum_mpiv1 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 20 sum_mpiv1 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 30 sum_mpiv1 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 50 sum_mpiv1 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 100 sum_mpiv1 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 1 sum_mpiv2 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 2 sum_mpiv2 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 3 sum_mpiv2 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 10 sum_mpiv2 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 20 sum_mpiv2 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 30 sum_mpiv2 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 50 sum_mpiv2 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 100 sum_mpiv2 sample_inputs/input1.txt 
+275
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ ./sum_s ./sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 1 sum_mpiv1 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 2 sum_mpiv1 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 5 sum_mpiv1 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 10 sum_mpiv1 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 20 sum_mpiv1 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 30 sum_mpiv1 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 50 sum_mpiv1 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 100 sum_mpiv1 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 1 sum_mpiv2 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 2 sum_mpiv2 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 5 sum_mpiv2 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 10 sum_mpiv2 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 20 sum_mpiv2 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 30 sum_mpiv2 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 50 sum_mpiv2 sample_inputs/input2.txt 
+630
+doruk@doruk:~/Desktop/CS426/CS426-Parallel-Computing-Projects/project1/compute_sum$ mpirun -np 100 sum_mpiv2 sample_inputs/input2.txt 
+630
