@@ -1,11 +1,6 @@
-#include "stdio.h"
-#include "string.h"
-//#include "mpi.h"
+#include "utils.h"
+#include "mpi.h"
 
-// to ensure the read buffer does not overflow but can be improved TODO
-#define MAX_LINE_LENGTH 1000 
-
-// kreduce implementation
 void kreduce(int * leastk, int * myids, int * myvals, int k, int world_size, int my_rank){
 
 }
@@ -31,124 +26,59 @@ int main(int argc, char **argv) {
     int D = atoi(argv[3]);
     int K = atoi(argv[4]);
 
-    FILE *W_file, *Q_file;
+    int **documents, **queries, *document_ids;
 
-    char line[MAX_LINE_LENGTH]; 
-    W_file = fopen(W_filename, "r");
-    Q_file = fopen(Q_filename, "r");
+    int query_count = read_query_file(Q_filename, D, K, &queries);
+    int document_count = read_document_file(W_filename, D, K, &documents, &document_ids);
 
-    // read the document file
-    if( W_file == NULL ){
-        printf("Could not open file: %s", W_filename);
-        return -1;
-    }
+    // copy the data at heap to stack
+    int docs[document_count][D];
+    int doc_ids[document_count];
+    int qs[query_count][D];
 
-    // find the number of documents by pre-reading file
-    int line_count = 0;
-
-    while(fgets(line, MAX_LINE_LENGTH, W_file) != NULL) {
-        line_count++;
-    }
-
-    fclose(W_file);
-
-    int num_docs = line_count;
-
-    //re-read the document file to store its contents in arrays.
-    int documents[line_count][D];
-    int document_ids[line_count];
-
-    W_file = fopen(W_filename, "r");
-
-    int index = 0;
-    char *remainder;
-    char * ele;
-    const char delimiters[] = ": ";
-
-    while(fgets(line, MAX_LINE_LENGTH, W_file) != NULL) {
-
-        // line structure --> id: w0 w1 w2 ... wd
-        char * running = strdup(line);
-
-        // get document id
-        ele = strsep(&running, delimiters);
-        document_ids[index] = atoi(ele);
-
-        // get words of the document
-        int j = 0;
-        
-        // need to separate two times for the following substring in input line: ': '
-        ele = strsep(&running, delimiters);
-        ele = strsep(&running, delimiters);
-        
-        while(ele != NULL){
-            documents[index][j] = atoi(ele);
-            j++;
-            ele = strsep(&running, delimiters);
-        }
-
-        index++;
-    }
-
-    fclose(W_file);
-
-    // read the query file
-    if( Q_file == NULL ){
-        printf("Could not open file: %s", Q_filename);
-        return -1;
-    }
-
-    line_count = 0;
-
-    while(fgets(line, MAX_LINE_LENGTH, Q_file) != NULL) {
-        line_count++;
-    }
-
-    fclose(Q_file);
-
-    int num_queries = line_count;
-
-    int queries[line_count][D];
-
-    // re-read query file to get queries
-    Q_file = fopen(Q_filename, "r");
-
-    index = 0;
-    while ( fgets(line, MAX_LINE_LENGTH, Q_file) != NULL) {
-
-        int j = 0;
-        ele =  strtok(line, " ");
-
-        while (ele != NULL) {
-
-            queries[index][j] = atoi(ele);
-            j++;
-            ele = strtok(NULL, " ");
-        }
-
-        index++;
-    }
-
-    fclose(Q_file);
-
-    // test if documents are stored
-    for(int i = 0; i < num_docs; i++){
-        printf("%d: ", document_ids[i]);
+    for(int i = 0; i < document_count; i++){
+        doc_ids[i] = document_ids[i];
         for(int j = 0; j < D; j++){
-            printf("%d ", documents[i][j]);
+            docs[i][j] = documents[i][j];
         }
-        printf("\n");
     }
 
-    // test if queries are stored
-    for(int i = 0; i < num_queries; i++){
+    for(int i = 0; i < query_count; i++){
         for(int j = 0; j < D; j++){
-            printf("%d ", queries[i][j]);
+            qs[i][j] = queries[i][j];
         }
-        printf("\n");
     }
+
+    // delete the data stored at heap
+    free(document_ids);
+    for(int i = 0; i < document_count; i++) {
+        free(documents[i]);
+    }
+    free(documents);
+
+    for(int i = 0; i < query_count; i++) {
+        free(queries[i]);
+    }
+    free(queries);
+
+    //-------------------- parallel part --------------------
+    int rank, size;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    printf("I am processor %d / %d and I have documents[1][2] as %d\n", (rank+1), size, docs[1][2]);
+    
+
+    // first we need to separate the query files and documents among the processors.
+    // note that master also does computation.
+
+
+    MPI_Finalize();
+    return 0;
+
+
 
     
-    //-------------------- parallel part --------------------
-    return 0;
 }
