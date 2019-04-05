@@ -1,4 +1,3 @@
-#include "stdio.h"
 #include "utils.h"
 
 int read_query_file(char * Q_filename, int D, int K, int*** queries){
