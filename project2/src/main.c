@@ -180,29 +180,16 @@ int main(int argc, char **argv) {
 
     double t1, t2;
     t1 = MPI_Wtime();
-
-    //printf("I am processor %d / %d and I have documents[1][2] as %d\n", (rank+1), size, docs[1][2]);
     
-
     // first we need to separate the query files and documents among the processors.
     // note that master also does computation.
+    // everyone determines their contiguous set of the documents to compute similarity.  
 
-    // everyone determines their contiguous set of the documents to compute similarity.
-    // Assumption: Since the sizes of myids and myvals are declared as K in the project description,
-    // (the number of processes used) * K must be equal to the number of documents and the remainder of document count 
-    // of dividing with K must be 0!!  
-
-    // int start_index = K*rank ;
-    // int computation_size = K;
 
     int quotient = document_count / size;
     int remainder = document_count % size;
     int start_index = rank >= remainder ? quotient*rank + remainder : quotient*rank +rank;
     int computation_size = rank >= remainder ? quotient : quotient + 1;
-
-    //printf("I am processor %d / %d and I have start_index: %d and computation_size as %d\n", (rank+1), size, start_index, computation_size);
-
-    // if computation size is 0, don't do an operation on any data !!!!!!!
 
     // data allocation per processor
     int * myids = malloc(computation_size * sizeof(int));
@@ -211,8 +198,6 @@ int main(int argc, char **argv) {
     if (rank == 0) {
         least_k = malloc(K * sizeof(int));
     }
-
-    
 
     // compute similarity values and the inputs for kreduce function
     for(int i = 0; i < computation_size; i++) {
@@ -223,8 +208,6 @@ int main(int argc, char **argv) {
         }
     }
 
-    
-
     // combine id and similarity values of documents to sort them together based on similarity value.
     Pair *combined = malloc(computation_size * sizeof(Pair));
 
@@ -233,18 +216,25 @@ int main(int argc, char **argv) {
         combined[i].val = myvals[i];
     }
 
+    // in order not to memory leak
+    free(myids);
+    free(myvals);
+
     // sort document ids and similarity values together based on similarity values
     qsort(combined, computation_size, (sizeof *combined), id_val_cmp);
 
+    // previous arrays were of size computation_size however kreduce expects arrays of size k
     int * myids_2 = malloc(K * sizeof(int));
     int * myvals_2 = malloc(K * sizeof(int));
 
     // get the sorted order of ids and values
     for(int i = 0; i < K; i++) {
+        // truncate larger computation_size - K entries
         if( K <= computation_size) {
             myids_2[i] = combined[i].id;
             myvals_2[i] = combined[i].val;
         }
+        // insert invalid entries for the last K - computation_size entries
         else {
             if( i < computation_size) {
                 myids_2[i] = combined[i].id;
@@ -261,13 +251,14 @@ int main(int argc, char **argv) {
 
     free(combined);
 
-    printf("I am processor %d / %d and I have myids: ", (rank+1), size);
-    for(int i = 0; i < K; i++)
-        printf("%d ", myids_2[i]);
-    printf("and myvals: ");
-    for (int j = 0; j < K; j++)
-        printf("%d ", myvals_2[j]);
-    printf("\n");
+    // for testing purposes ->
+    // printf("I am processor %d / %d and I have myids: ", (rank+1), size);
+    // for(int i = 0; i < K; i++)
+    //     printf("%d ", myids_2[i]);
+    // printf("and myvals: ");
+    // for (int j = 0; j < K; j++)
+    //     printf("%d ", myvals_2[j]);
+    // printf("\n");
 
     kreduce(least_k, myids_2, myvals_2, K, size, rank);
 
@@ -288,12 +279,7 @@ int main(int argc, char **argv) {
     }
     t2 = MPI_Wtime();
 
-    
-    
-    
+    free(least_k);
+
     return 0;
-
-
-
-    
 }
