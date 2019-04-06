@@ -1,0 +1,11 @@
+Serial Part: 0.036000 ms
+Parallel Part: 14.162709 ms
+Total Time: 14.198709 ms
+Least k = 5 ids:
+1
+2
+7
+19
+28
+
+NOTE: It appears that 8 and 28 have same similarity values!

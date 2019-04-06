@@ -1,0 +1,8 @@
+Serial Part: 0.025000 ms
+Parallel Part: 0.038881 ms
+Total Time: 0.063881 ms
+Least k = 2 ids:
+1
+2
+
+# of processes: 2

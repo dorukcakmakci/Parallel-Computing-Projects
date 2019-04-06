@@ -1,0 +1,14 @@
+Serial Part: 0.041000 ms
+Parallel Part: 0.260115 ms
+Total Time: 0.301115 ms
+Least k = 10 ids:
+1
+2
+7
+19
+8
+28
+25
+44
+29
+15

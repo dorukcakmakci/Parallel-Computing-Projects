@@ -1,0 +1,5 @@
+Serial Part: 0.039000 ms
+Parallel Part: 0.080622 ms
+Total Time: 0.119622 ms
+Least k = 1 ids:
+1
