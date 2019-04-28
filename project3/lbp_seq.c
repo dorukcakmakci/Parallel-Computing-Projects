@@ -5,6 +5,7 @@
 #include "util.h"
 #include <math.h>   
 #include <limits.h>
+#include <time.h>
 
 void create_histogram(int * hist, int **img, int num_rows, int num_cols) {
 
@@ -248,6 +249,8 @@ int find_closest(int ***training_set, int num_persons, int num_training, int siz
 
 int main(int * argc, char **argv) {
 
+    clock_t begin = clock();
+
     
     int k = atoi(argv[1]); // k is the number of training set images, and 20 > k > 0
 
@@ -290,35 +293,36 @@ int main(int * argc, char **argv) {
         while ( (dir = readdir(d)) != NULL) {
 
 
-            if( i == 0 || i == 1) {i++; continue;};
-
-            img_name = dir->d_name;
-
-            if(img_name == "Readme.txt") continue;
-
-            // printf("image name %s   --\n", img_name);
-            // fflush(stdout);
-
-            char * running = strdup(img_name);
-
-            // get the person_id and img_id from current filename.
-            ele = strsep(&running, delimiters);
-            cur_person_id = atoi(ele);
-            ele = strsep(&running, delimiters);
-            cur_img_id = atoi(ele);
-            
-            sprintf(abs_file_path, "%s/%s", img_dir, img_name);
-            printf("abs file path: %s\n", abs_file_path);
-            cur_img = read_pgm_file(abs_file_path, img_height, img_width); 
-
-
-            if(cur_img_id > k) {
-                // the image is in test set i.e. the images with ids between k + 1 and 20
-                create_histogram(test_set_histograms[cur_person_id - 1][cur_img_id - 1 - k], cur_img, img_height, img_width); 
+            if( i == 0 || i == 1) {
+                i++; 
             }
             else {
-                // the image is in training set i.e. the images with ids between 1 and k
-                create_histogram(training_set_histograms[cur_person_id - 1][cur_img_id - 1], cur_img, img_height, img_width); 
+                img_name = dir->d_name;
+
+                // printf("image name %s   --\n", img_name);
+                // fflush(stdout);
+
+                char * running = strdup(img_name);
+
+                // get the person_id and img_id from current filename.
+                ele = strsep(&running, delimiters);
+                cur_person_id = atoi(ele);
+                ele = strsep(&running, delimiters);
+                cur_img_id = atoi(ele);
+                
+                sprintf(abs_file_path, "%s/%s", img_dir, img_name);
+                // printf("abs file path: %s\n", abs_file_path);
+                cur_img = read_pgm_file(abs_file_path, img_height, img_width); 
+
+
+                if(cur_img_id > k) {
+                    // the image is in test set i.e. the images with ids between k + 1 and 20
+                    create_histogram(test_set_histograms[cur_person_id - 1][cur_img_id - 1 - k], cur_img, img_height, img_width); 
+                }
+                else {
+                    // the image is in training set i.e. the images with ids between 1 and k
+                    create_histogram(training_set_histograms[cur_person_id - 1][cur_img_id - 1], cur_img, img_height, img_width); 
+                }
             }
 
         }
@@ -326,28 +330,27 @@ int main(int * argc, char **argv) {
         closedir(d);
     }
 
-    
-
-    
-
-
-
     // now histograms for the training and test set are computed.
     // generate test result s and compare them with correct values.
-    int error_count = 0;
+    int correct_count = 0;
     int pred = -1;
     for( int i = 0; i < num_person; i++) {
         for( int j = 0; j < 20 - k; j++) {
             // find closest training hist.
             pred = find_closest(training_set_histograms, num_person, k,  bin_count, test_set_histograms[i][j]);
             printf("%d.%d.txt %d %d\n", (i+1), (j + k + 1), pred, i+1);
-            if(pred != (i+1)){ 
-                error_count++;
+            if(pred == (i+1)){ 
+                correct_count++;
             }
         }
     }
 
-    printf("k = %d, %d errors out of %d test images", k, error_count, num_person*(20 - k));
+    clock_t end = clock();
+    double seq_time = (double)(end - begin) * 1000 / CLOCKS_PER_SEC;
+
+    printf("Accuracy: %d correct answers for %d tests\n", correct_count, num_person*(20 - k));
+    printf("Parallel time: 00.00 ms\n");
+    printf("Sequential time: %f ms\n", seq_time);
 
     return 0;
 }
