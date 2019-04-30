@@ -275,59 +275,30 @@ int main(int * argc, char **argv) {
     //--------------------------- Training Step & Test Step Histogram Creation -----------------------------------------------
 
     // read image files in the "images/"" directory and generate corresponding histograms
-    DIR *d;
-    struct dirent *dir;
-    const char delimiters[] = ".";
-    char * ele;
     int cur_person_id;
     int cur_img_id;
     int ** cur_img;
     char * abs_file_path = malloc (19 * sizeof(char));
 
-    d = opendir(img_dir);
-    
-    if(d) {
+    for (cur_person_id = 1; cur_person_id <= num_person; cur_person_id++) {
+        for (cur_img_id = 1; cur_img_id <= img_per_person; cur_img_id++ ) {
 
-        int i = 0;
-
-        while ( (dir = readdir(d)) != NULL) {
+            sprintf(abs_file_path, "%s/%d.%d.txt", img_dir, cur_person_id, cur_img_id);
+            cur_img = read_pgm_file(abs_file_path, img_height, img_width); 
 
 
-            if( i == 0 || i == 1) {
-                i++; 
+            if(cur_img_id > k) {
+                // the image is in test set i.e. the images with ids between k + 1 and 20
+                create_histogram(test_set_histograms[cur_person_id - 1][cur_img_id - 1 - k], cur_img, img_height, img_width); 
             }
             else {
-                img_name = dir->d_name;
-
-                // printf("image name %s   --\n", img_name);
-                // fflush(stdout);
-
-                char * running = strdup(img_name);
-
-                // get the person_id and img_id from current filename.
-                ele = strsep(&running, delimiters);
-                cur_person_id = atoi(ele);
-                ele = strsep(&running, delimiters);
-                cur_img_id = atoi(ele);
-                
-                sprintf(abs_file_path, "%s/%s", img_dir, img_name);
-                // printf("abs file path: %s\n", abs_file_path);
-                cur_img = read_pgm_file(abs_file_path, img_height, img_width); 
-
-
-                if(cur_img_id > k) {
-                    // the image is in test set i.e. the images with ids between k + 1 and 20
-                    create_histogram(test_set_histograms[cur_person_id - 1][cur_img_id - 1 - k], cur_img, img_height, img_width); 
-                }
-                else {
-                    // the image is in training set i.e. the images with ids between 1 and k
-                    create_histogram(training_set_histograms[cur_person_id - 1][cur_img_id - 1], cur_img, img_height, img_width); 
-                }
+                // the image is in training set i.e. the images with ids between 1 and k
+                create_histogram(training_set_histograms[cur_person_id - 1][cur_img_id - 1], cur_img, img_height, img_width); 
             }
 
+            dealloc_2d_matrix(cur_img, img_height, img_width);
         }
 
-        closedir(d);
     }
 
     // now histograms for the training and test set are computed.
@@ -349,8 +320,8 @@ int main(int * argc, char **argv) {
     double seq_time = (double)(end - begin) * 1000 / CLOCKS_PER_SEC;
 
     printf("Accuracy: %d correct answers for %d tests\n", correct_count, num_person*(20 - k));
-    printf("Parallel time: 00.00 ms\n");
     printf("Sequential time: %f ms\n", seq_time);
+    printf("Parallel time: 00.00 ms\n");
 
     return 0;
 }
