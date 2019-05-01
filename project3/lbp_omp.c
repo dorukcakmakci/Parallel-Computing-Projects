@@ -362,8 +362,7 @@ int main(int * argc, char **argv) {
 
             sprintf(abs_file_path, "%s/%d.%d.txt", img_dir, cur_person_id, cur_img_id);
             cur_img = read_pgm_file(abs_file_path, img_height, img_width); 
-
-
+            
             // the image is in training set i.e. the images with ids between 1 and k
             create_histogram(training_set_histograms[cur_person_id - 1][cur_img_id - 1], cur_img, img_height, img_width); 
 
@@ -371,11 +370,8 @@ int main(int * argc, char **argv) {
         }
 
     }
-    //------------------------------------------ end of second parallel segment
-    gettimeofday(&parallel_end_2, NULL);
-
-    //------------------------------------------ beginning of third sequential segment
-    gettimeofday(&sequential_begin_3, NULL);
+    
+    
 
     // now histograms for the training and test set are computed.
     // generate test result s and compare them with correct values.
@@ -383,7 +379,7 @@ int main(int * argc, char **argv) {
     int pred = -1;
     for( int i = 0; i < num_person; i++) {
         for( int j = 0; j < 20 - k; j++) {
-            // find closest training hist.
+            // find closest training hist. find_closest is parallel therefore this segment is added to parallel timing
             pred = find_closest(training_set_histograms, num_person, k,  bin_count, test_set_histograms[i][j]);
             printf("%d.%d.txt %d %d\n", (i+1), (j + k + 1), pred, i+1);
             if(pred == (i+1)){ 
@@ -391,6 +387,14 @@ int main(int * argc, char **argv) {
             }
         }
     }
+
+    //------------------------------------------ end of second parallel segment
+    gettimeofday(&parallel_end_2, NULL);
+
+
+    //------------------------------------------ beginning of third sequential segment
+    gettimeofday(&sequential_begin_3, NULL);
+    
     double parallel_time = (parallel_end_1.tv_sec - parallel_begin_1.tv_sec) * 1000 + (parallel_end_1.tv_usec - parallel_begin_1.tv_usec)/1000;
     parallel_time += (parallel_end_2.tv_sec - parallel_begin_2.tv_sec) * 1000 + (parallel_end_2.tv_usec - parallel_begin_2.tv_usec)/1000;
     double sequential_time = (sequential_end_1.tv_sec - sequential_begin_1.tv_sec) * 1000 + (sequential_end_1.tv_usec - sequential_begin_1.tv_usec)/1000;
@@ -405,7 +409,7 @@ int main(int * argc, char **argv) {
     printf("Accuracy: %d correct answers for %d tests\n", correct_count, num_person*(20 - k));
     printf("Parallel time: %f ms\n", parallel_time);
     printf("Sequential time: %f ms\n", sequential_time);
-    printf("Total time: %f ms\n", sequential_time + parallel_time);
+
 
 
     return 0;

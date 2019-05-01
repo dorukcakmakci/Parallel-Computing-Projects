@@ -5,7 +5,7 @@
 #include "util.h"
 #include <math.h>   
 #include <limits.h>
-#include <time.h>
+#include <sys/time.h>
 
 void create_histogram(int * hist, int **img, int num_rows, int num_cols) {
 
@@ -249,7 +249,8 @@ int find_closest(int ***training_set, int num_persons, int num_training, int siz
 
 int main(int * argc, char **argv) {
 
-    clock_t begin = clock();
+    struct timeval begin, end;
+    gettimeofday(&begin, NULL);
 
     
     int k = atoi(argv[1]); // k is the number of training set images, and 20 > k > 0
@@ -316,8 +317,8 @@ int main(int * argc, char **argv) {
         }
     }
 
-    clock_t end = clock();
-    double seq_time = (double)(end - begin) * 1000 / CLOCKS_PER_SEC;
+    gettimeofday(&end, NULL);
+    double seq_time = (end.tv_sec - begin.tv_sec) * 1000 + (end.tv_usec - begin.tv_usec)/1000;
 
     printf("Accuracy: %d correct answers for %d tests\n", correct_count, num_person*(20 - k));
     printf("Sequential time: %f ms\n", seq_time);
