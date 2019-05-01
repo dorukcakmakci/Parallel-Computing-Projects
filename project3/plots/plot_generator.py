@@ -28,9 +28,8 @@ plt.show()
 
 # Execution Time vs K value for parallel implementation
 K = [1, 2, 5, 7, 10]
-serial = [243, 446, 930, 1102, 1287]
-parallel = [1213, 1217, 1283, 1276, 1242] #num_of_threads = 6
-total = [1456, 1663, 2213, 2378, 2529]
+serial = [0, 0, 0, 0, 0]
+parallel = [1474, 1675, 2240, 2395, 2481] #num_of_threads = 6
 
 plt.figure()
 plt.title('\n'.join(wrap('Execution Time vs K for parallel implementation, num_of_threads = 6')))
@@ -39,7 +38,6 @@ plt.ylabel("Execution Time (milliseconds)")
 plt.autoscale(enable=True, axis='both', tight=True)
 plt.plot(K, serial, 'ro', label="Sequential Part Time", alpha=0.7)
 plt.plot(K, parallel, 'co', label="Parallel Part Time", alpha=0.7)
-plt.plot(K, total, 'go', label="Total Time", alpha=0.7)
 plt.legend()
 plt.savefig("time_vs_K_parallel_num_of_threads_6.png")
 plt.show()
@@ -62,8 +60,9 @@ plt.show()
 
 # Execution Time vs num_of_threads for parallel implementation K = 5
 num_of_threads = [1, 2, 4, 6, 8, 16]
-serial = [168, 424, 735, 930, 1064, 964]
-parallel = [5178, 2688, 1705, 1283, 1229, 1321] 
+serial = [0, 0, 0, 0, 0, 0]
+parallel = [5061, 3011, 2311, 2240, 2293, 2151] 
+sequential = 6*[4872]
 
 plt.figure()
 plt.title('\n'.join(wrap('Execution Time vs num_of_threads for parallel implementation, K = 5')))
@@ -72,6 +71,7 @@ plt.ylabel("Execution Time (milliseconds)")
 plt.autoscale(enable=True, axis='both', tight=True)
 plt.plot(num_of_threads, serial, 'ro', label="Sequential Part Time", alpha=0.7)
 plt.plot(num_of_threads, parallel, 'co', label="Parallel Part Time", alpha=0.7)
+plt.plot(num_of_threads, sequential, 'go', label="Sequential Implementation Time", alpha=0.7)
 plt.legend()
 plt.savefig("time_vs_num_of_threads_parallel_K_5.png")
 plt.show()
