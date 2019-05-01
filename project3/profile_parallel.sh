@@ -1,4 +1,4 @@
-gcc -pg -o lbp_omp -fopenmp util.c lbp_omp.c -lm
+gcc -g -pg -o lbp_omp -fopenmp util.c lbp_omp.c -lm
 for num_of_threads in 1 2 4 6 8 16
 do
     # run parallel code here
