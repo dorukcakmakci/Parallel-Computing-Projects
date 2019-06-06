@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
+#include <sys/time.h>
 
 #include "cuda.h"
 
@@ -84,6 +85,10 @@ __global__ void computeMatrixVectorProduct(int *d_row_ptr, int *d_col_ind, doubl
 }
 
 int main(int argc, char ** argv) {
+
+    // sequential part starts here
+    struct timeval parallel_begin, parallel_end, sequential_begin, sequential_end;
+    gettimeofday(&sequential_begin, NULL);
 
     int thread_count = atoi(argv[1]);
     int iter_count = atoi(argv[2]);
@@ -167,6 +172,10 @@ int main(int argc, char ** argv) {
         x[i] = 1;
     }
 
+    gettimeofday(&sequential_end, NULL);
+    // sequential part ends here
+    gettimeofday(&parallel_begin, NULL);
+
     // print sparse matrix and vector before computation
     if(flag == 1){
         printf("Before Computation:\n");
@@ -200,7 +209,7 @@ int main(int argc, char ** argv) {
         printf("\n");
     }
 
-    // computation starts here
+    // computation (Parallelizable part) starts here
 
     // initialize device related structures 
     double *d_values, *d_vector, *d_result_vector;
@@ -218,6 +227,7 @@ int main(int argc, char ** argv) {
 
     int iter;
     for(iter = 0; iter < iter_count; iter++) {
+
         cudaMemcpy(d_vector, x, num_rows * sizeof(double), cudaMemcpyHostToDevice);
 
         // call kernel code for sparse matrix and vector multiplication
@@ -225,15 +235,6 @@ int main(int argc, char ** argv) {
 
         cudaMemcpy(x, d_result_vector, num_rows * sizeof(double), cudaMemcpyDeviceToHost);
 
-        // free device matrices
-
-        // // for testing purposes
-        // // printf("1: %s\n", cudaGetErrorString(cudaGetLastError()));
-        // printf("Iter: %d, Vector X: \n", iter);
-        // for(int i = 0; i < num_rows; i++) {
-        //     printf("%le ", x[i]);
-        // }
-        // printf("\n");
     }
 
     cudaFree(d_values);
@@ -241,6 +242,8 @@ int main(int argc, char ** argv) {
     cudaFree(d_row_ptr);
     cudaFree(d_col_ind);
     cudaFree(d_result_vector);
+
+    gettimeofday(&parallel_end, NULL);
 
     // print resulting vector from computation
     if(flag == 1 || flag == 2){
@@ -253,6 +256,12 @@ int main(int argc, char ** argv) {
         }
         printf("\n");
     }
+
+    double parallel_time = (parallel_end.tv_sec - parallel_begin.tv_sec) * 1000 + (parallel_end.tv_usec - parallel_begin.tv_usec)/1000;
+    double sequential_time = (sequential_end.tv_sec - sequential_begin.tv_sec) * 1000 + (sequential_end.tv_usec - sequential_begin.tv_usec)/1000;
+
+    printf("Parallel time: %f ms\n", parallel_time);
+    printf("Sequential time: %f ms\n", sequential_time);
 
     return 0;
 
